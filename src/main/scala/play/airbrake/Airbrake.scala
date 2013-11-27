@@ -16,6 +16,7 @@ object Airbrake {
   private lazy val apiKey = app.configuration.getString("airbrake.apiKey") getOrElse { throw UnexpectedException(Some("Could not find airbrake.apiKey in settings")) }
   private lazy val ssl = app.configuration.getBoolean("airbrake.ssl").getOrElse(false)
   private lazy val endpoint = app.configuration.getString("airbrake.endpoint") getOrElse "api.airbrake.io/notifier_api/v2/notices"
+  private lazy val environment = app.configuration.getString("airbrake.environment") getOrElse app.mode.toString
 
   /**
     * Scala API
@@ -64,7 +65,7 @@ object Airbrake {
       Airbrake.setEnvironment(%s);
       Airbrake.setGuessFunctionName(true);
     </script>
-    """.format(apiKey, app.mode)
+    """.format(apiKey, environment)
   } else ""
 
   protected def liftThrowable(th: Throwable) = th match {
@@ -94,7 +95,7 @@ object Airbrake {
         { formatSession(data) }
       </request>
       <server-environment>
-        <environment-name>{ app.mode }</environment-name>
+        <environment-name>{ environment }</environment-name>
       </server-environment>
     </notice>
   }
