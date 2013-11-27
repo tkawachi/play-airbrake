@@ -5,9 +5,9 @@ import play.api.PlayException
 import play.api.UnexpectedException
 import play.api.mvc.RequestHeader
 import play.api.libs.ws.WS
-import play.api.libs.concurrent.Akka
 import play.api.Play.current
 import scala.collection.JavaConversions._
+import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 
 object Airbrake {
@@ -43,12 +43,12 @@ object Airbrake {
     * }}}
     */
   def notify(request: play.mvc.Http.RequestHeader, th: Throwable): Unit = if(enabled){
-    val data = request.headers.toMap.mapValues(_.toList.toString)
+    val data = request.headers.toMap.mapValues(_.toList.toString())
     _notify(request.method, request.uri, data, th)
   }
 
   protected def _notify(method: String, uri: String, data: Map[String, String], th: Throwable): Unit =
-    Akka.future {
+    Future {
       val scheme = if(ssl) "https" else "http"
       WS.url(scheme + "://" + endpoint).post(formatNotice(app, apiKey, method, uri, data, liftThrowable(th))).onComplete { response =>
         Logger.info("Exception notice sent to Airbrake")
